@@ -179,6 +179,58 @@ function Invoke-FiveMTweaks {
     return $log
 }
 
+function Find-FortnitePaths {
+    $paths = New-Object System.Collections.Generic.List[string]
+    $candidateRoots = @(
+        "$env:ProgramFiles\Epic Games\Fortnite",
+        "${env:ProgramFiles(x86)}\Epic Games\Fortnite",
+        "C:\Epic Games\Fortnite",
+        "D:\Epic Games\Fortnite",
+        "E:\Epic Games\Fortnite",
+        "C:\Games\Fortnite",
+        "D:\Games\Fortnite",
+        "E:\Games\Fortnite"
+    )
+
+    foreach ($root in $candidateRoots) {
+        if (Test-Path $root) {
+            Get-ChildItem -Path $root -Filter "*.exe" -Recurse -ErrorAction SilentlyContinue |
+                Where-Object {
+                    $_.Name -eq "FortniteClient-Win64-Shipping.exe" -or
+                    $_.Name -eq "FortniteLauncher.exe" -or
+                    $_.Name -eq "FortniteClient-Win64-Shipping_EAC.exe" -or
+                    $_.Name -eq "FortniteClient-Win64-Shipping_BE.exe"
+                } |
+                ForEach-Object { $paths.Add($_.FullName) }
+        }
+    }
+
+    return $paths | Select-Object -Unique
+}
+
+function Invoke-FortniteTweaks {
+    $log = New-Object System.Collections.Generic.List[string]
+    $fortnitePaths = Find-FortnitePaths
+
+    if (-not $fortnitePaths -or $fortnitePaths.Count -eq 0) {
+        $log.Add("Fortnite install not found automatically. Windows gaming tweaks were still applied.")
+        return $log
+    }
+
+    foreach ($path in $fortnitePaths) {
+        $log.Add("Applying Fortnite high-performance GPU preference: $path")
+        Set-RegValue "HKCU:\Software\Microsoft\DirectX\UserGpuPreferences" $path "GpuPreference=2;" ([Microsoft.Win32.RegistryValueKind]::String)
+
+        $log.Add("Disabling fullscreen optimizations for: $path")
+        Set-RegValue "HKCU:\Software\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers" $path "~ DISABLEDXMAXIMIZEDWINDOWEDMODE" ([Microsoft.Win32.RegistryValueKind]::String)
+    }
+
+    $log.Add("Setting Fortnite CPU priority preference to High.")
+    Set-RegValue "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\FortniteClient-Win64-Shipping.exe\PerfOptions" "CpuPriorityClass" 3
+
+    return $log
+}
+
 function Invoke-MinimalTweaks {
     $log = New-Object System.Collections.Generic.List[string]
 
@@ -201,7 +253,10 @@ function Invoke-MinimalTweaks {
 }
 
 function Invoke-StandardTweaks {
-    param([bool]$FiveMMode)
+    param(
+        [bool]$FiveMMode,
+        [bool]$FortniteMode
+    )
 
     $log = Invoke-MinimalTweaks
 
@@ -233,6 +288,12 @@ function Invoke-StandardTweaks {
         }
     }
 
+    if ($FortniteMode) {
+        foreach ($line in (Invoke-FortniteTweaks)) {
+            $log.Add($line)
+        }
+    }
+
     return $log
 }
 
@@ -240,10 +301,11 @@ function Invoke-AdvancedTweaks {
     param(
         [bool]$EnableHags,
         [bool]$UseUltimatePower,
-        [bool]$FiveMMode
+        [bool]$FiveMMode,
+        [bool]$FortniteMode
     )
 
-    $log = Invoke-StandardTweaks -FiveMMode $FiveMMode
+    $log = Invoke-StandardTweaks -FiveMMode $FiveMMode -FortniteMode $FortniteMode
 
     if ($UseUltimatePower) {
         $log.Add((Set-UltimatePerformancePower))
@@ -274,27 +336,27 @@ function Invoke-AdvancedTweaks {
 
 $planDetails = @{
     Minimal = @(
-        "Best for: light FiveM cleanup, very low risk",
-        "FiveM FPS target: up to +10 FPS if Windows background overhead was hurting FiveM",
+        "Best for: light FiveM/Fortnite cleanup, very low risk",
+        "FPS target: up to +10 FPS if Windows background overhead was hurting your game",
         "Guarantee: no fixed FPS gain; results depend on game, GPU, CPU, RAM, and thermals",
         "Reduce Windows tips, suggestions, and notification clutter",
         "Disable transparency effects",
         "Clear temporary files"
     )
     Standard = @(
-        "Best for: FiveM setup most players should use",
-        "FiveM FPS target: up to +15 FPS when capture, Game DVR, or power limits were hurting performance",
+        "Best for: FiveM/Fortnite setup most players should use",
+        "FPS target: up to +15 FPS when capture, Game DVR, or power limits were hurting performance",
         "Guarantee: no fixed FPS gain; this plan is mainly for smoother FPS and better 1% lows",
         "Everything in Minimal",
         "Enable High performance power plan",
         "Enable Game Mode",
         "Disable Xbox Game DVR/background capture",
         "Disable Windows power throttling",
-        "FiveM mode: high-performance GPU preference and fullscreen optimization tweak"
+        "Game modes: high-performance GPU preference and fullscreen optimization tweak"
     )
     Advanced = @(
-        "Best for: FiveM desktop setup where FPS consistency matters most",
-        "FiveM FPS target: up to +20-25 FPS on PCs limited by Windows overhead or power behavior",
+        "Best for: FiveM/Fortnite desktop setup where FPS consistency matters most",
+        "FPS target: up to +20-25 FPS on PCs limited by Windows overhead or power behavior",
         "Guarantee: no fixed FPS gain; strongest chance is better stutter and 1% lows",
         "Everything in Standard",
         "Optional Ultimate Performance power plan",
@@ -417,9 +479,9 @@ $backupCheck.Location = New-Object System.Drawing.Point(16, 60)
 $safetyGroup.Controls.Add($backupCheck)
 
 $advancedGroup = New-Object System.Windows.Forms.GroupBox
-$advancedGroup.Text = "Advanced options"
+$advancedGroup.Text = "Options"
 $advancedGroup.Location = New-Object System.Drawing.Point(314, 346)
-$advancedGroup.Size = New-Object System.Drawing.Size(550, 74)
+$advancedGroup.Size = New-Object System.Drawing.Size(550, 98)
 $advancedGroup.ForeColor = $Mint
 $advancedGroup.BackColor = $Deep
 $form.Controls.Add($advancedGroup)
@@ -429,7 +491,7 @@ $ultimateCheck.Text = "Use Ultimate Performance power plan"
 $ultimateCheck.Checked = $true
 $ultimateCheck.AutoSize = $true
 $ultimateCheck.ForeColor = $Text
-$ultimateCheck.Location = New-Object System.Drawing.Point(16, 31)
+$ultimateCheck.Location = New-Object System.Drawing.Point(16, 27)
 $advancedGroup.Controls.Add($ultimateCheck)
 
 $hagsCheck = New-Object System.Windows.Forms.CheckBox
@@ -437,7 +499,7 @@ $hagsCheck.Text = "Enable HAGS"
 $hagsCheck.Checked = $false
 $hagsCheck.AutoSize = $true
 $hagsCheck.ForeColor = $Text
-$hagsCheck.Location = New-Object System.Drawing.Point(282, 31)
+$hagsCheck.Location = New-Object System.Drawing.Point(282, 27)
 $advancedGroup.Controls.Add($hagsCheck)
 
 $fiveMCheck = New-Object System.Windows.Forms.CheckBox
@@ -445,8 +507,16 @@ $fiveMCheck.Text = "FiveM mode"
 $fiveMCheck.Checked = $true
 $fiveMCheck.AutoSize = $true
 $fiveMCheck.ForeColor = $Text
-$fiveMCheck.Location = New-Object System.Drawing.Point(390, 31)
+$fiveMCheck.Location = New-Object System.Drawing.Point(16, 62)
 $advancedGroup.Controls.Add($fiveMCheck)
+
+$fortniteCheck = New-Object System.Windows.Forms.CheckBox
+$fortniteCheck.Text = "Fortnite mode"
+$fortniteCheck.Checked = $true
+$fortniteCheck.AutoSize = $true
+$fortniteCheck.ForeColor = $Text
+$fortniteCheck.Location = New-Object System.Drawing.Point(140, 62)
+$advancedGroup.Controls.Add($fortniteCheck)
 
 $detailsLabel = New-Object System.Windows.Forms.Label
 $detailsLabel.Text = "What this plan changes"
@@ -469,12 +539,12 @@ $logLabel.Text = "Log"
 $logLabel.Font = New-Object System.Drawing.Font("Segoe UI Semibold", 11)
 $logLabel.ForeColor = $Mint
 $logLabel.AutoSize = $true
-$logLabel.Location = New-Object System.Drawing.Point(310, 436)
+$logLabel.Location = New-Object System.Drawing.Point(310, 458)
 $form.Controls.Add($logLabel)
 
 $logBox = New-Object System.Windows.Forms.TextBox
-$logBox.Location = New-Object System.Drawing.Point(314, 466)
-$logBox.Size = New-Object System.Drawing.Size(550, 72)
+$logBox.Location = New-Object System.Drawing.Point(314, 488)
+$logBox.Size = New-Object System.Drawing.Size(550, 62)
 $logBox.Multiline = $true
 $logBox.ScrollBars = "Vertical"
 $logBox.ReadOnly = $true
@@ -525,6 +595,9 @@ function Update-Details {
     $isAdvanced = ($plan -eq "Advanced")
     $ultimateCheck.Enabled = $isAdvanced
     $hagsCheck.Enabled = $isAdvanced
+    $gameModeEnabled = ($plan -ne "Minimal")
+    $fiveMCheck.Enabled = $gameModeEnabled
+    $fortniteCheck.Enabled = $gameModeEnabled
 }
 
 function Update-AdminState {
@@ -573,9 +646,9 @@ $applyButton.Add_Click({
     }
 
     if ($plan -eq "Advanced") {
-        $result = Invoke-AdvancedTweaks -EnableHags $hagsCheck.Checked -UseUltimatePower $ultimateCheck.Checked -FiveMMode $fiveMCheck.Checked
+        $result = Invoke-AdvancedTweaks -EnableHags $hagsCheck.Checked -UseUltimatePower $ultimateCheck.Checked -FiveMMode $fiveMCheck.Checked -FortniteMode $fortniteCheck.Checked
     } elseif ($plan -eq "Standard") {
-        $result = Invoke-StandardTweaks -FiveMMode $fiveMCheck.Checked
+        $result = Invoke-StandardTweaks -FiveMMode $fiveMCheck.Checked -FortniteMode $fortniteCheck.Checked
     } else {
         $result = Invoke-MinimalTweaks
     }

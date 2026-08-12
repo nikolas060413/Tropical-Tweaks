@@ -438,18 +438,18 @@ $planDetails = @{
     )
 }
 
-$Deep = [System.Drawing.Color]::FromArgb(6, 12, 14)
-$Surface = [System.Drawing.Color]::FromArgb(12, 26, 29)
-$Surface2 = [System.Drawing.Color]::FromArgb(17, 39, 42)
-$Surface3 = [System.Drawing.Color]::FromArgb(22, 55, 56)
-$Mint = [System.Drawing.Color]::FromArgb(34, 211, 177)
-$MintDark = [System.Drawing.Color]::FromArgb(13, 148, 136)
-$Cyan = [System.Drawing.Color]::FromArgb(103, 232, 249)
-$Gold = [System.Drawing.Color]::FromArgb(250, 204, 96)
-$Text = [System.Drawing.Color]::FromArgb(240, 253, 250)
-$Muted = [System.Drawing.Color]::FromArgb(148, 176, 174)
-$Border = [System.Drawing.Color]::FromArgb(45, 93, 91)
-$Danger = [System.Drawing.Color]::FromArgb(251, 113, 133)
+$Deep = [System.Drawing.Color]::FromArgb(236, 253, 245)
+$Surface = [System.Drawing.Color]::FromArgb(255, 255, 255)
+$Surface2 = [System.Drawing.Color]::FromArgb(248, 255, 251)
+$Surface3 = [System.Drawing.Color]::FromArgb(232, 250, 242)
+$Mint = [System.Drawing.Color]::FromArgb(13, 148, 136)
+$MintDark = [System.Drawing.Color]::FromArgb(15, 118, 110)
+$Cyan = [System.Drawing.Color]::FromArgb(8, 145, 178)
+$Gold = [System.Drawing.Color]::FromArgb(245, 181, 61)
+$Text = [System.Drawing.Color]::FromArgb(13, 38, 35)
+$Muted = [System.Drawing.Color]::FromArgb(78, 104, 99)
+$Border = [System.Drawing.Color]::FromArgb(176, 223, 211)
+$Danger = [System.Drawing.Color]::FromArgb(190, 18, 60)
 
 function New-Panel {
     param(

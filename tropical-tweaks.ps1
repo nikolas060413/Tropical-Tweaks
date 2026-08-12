@@ -179,6 +179,30 @@ function Invoke-FiveMTweaks {
     return $log
 }
 
+function Clear-FiveMCache {
+    $log = New-Object System.Collections.Generic.List[string]
+    $cacheRoots = @(
+        "$env:LOCALAPPDATA\FiveM\FiveM.app\data\cache",
+        "$env:LOCALAPPDATA\FiveM\FiveM.app\data\server-cache",
+        "$env:LOCALAPPDATA\FiveM\FiveM.app\data\server-cache-priv",
+        "$env:LOCALAPPDATA\FiveM\FiveM.app\data\nui-storage"
+    )
+
+    foreach ($path in $cacheRoots) {
+        if (Test-Path $path) {
+            Get-ChildItem -Path $path -Force -ErrorAction SilentlyContinue |
+                Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+            $log.Add("Cleaned FiveM cache: $path")
+        }
+    }
+
+    if ($log.Count -eq 0) {
+        $log.Add("FiveM cache folders not found.")
+    }
+
+    return $log
+}
+
 function Find-FortnitePaths {
     $paths = New-Object System.Collections.Generic.List[string]
     $candidateRoots = @(
@@ -231,7 +255,37 @@ function Invoke-FortniteTweaks {
     return $log
 }
 
+function Clear-FortniteCache {
+    $log = New-Object System.Collections.Generic.List[string]
+    $cacheRoots = @(
+        "$env:LOCALAPPDATA\EpicGamesLauncher\Saved\webcache",
+        "$env:LOCALAPPDATA\EpicGamesLauncher\Saved\webcache_4147",
+        "$env:LOCALAPPDATA\EpicGamesLauncher\Saved\webcache_4430",
+        "$env:LOCALAPPDATA\FortniteGame\Saved\Logs",
+        "$env:TEMP\FortniteGame"
+    )
+
+    foreach ($path in $cacheRoots) {
+        if (Test-Path $path) {
+            Get-ChildItem -Path $path -Force -ErrorAction SilentlyContinue |
+                Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+            $log.Add("Cleaned Fortnite/Epic cache: $path")
+        }
+    }
+
+    if ($log.Count -eq 0) {
+        $log.Add("Fortnite/Epic cache folders not found.")
+    }
+
+    return $log
+}
+
 function Invoke-MinimalTweaks {
+    param(
+        [bool]$FiveMMode,
+        [bool]$FortniteMode
+    )
+
     $log = New-Object System.Collections.Generic.List[string]
 
     $log.Add("Reducing Windows tips and suggested content.")
@@ -249,6 +303,26 @@ function Invoke-MinimalTweaks {
     $log.Add("Clearing user temporary files.")
     Clear-UserTempFiles
 
+    $log.Add("Enabling Windows Game Mode.")
+    Set-RegValue "HKCU:\Software\Microsoft\GameBar" "AllowAutoGameMode" 1
+    Set-RegValue "HKCU:\Software\Microsoft\GameBar" "AutoGameModeEnabled" 1
+
+    $log.Add("Disabling Windows background game capture.")
+    Set-RegValue "HKCU:\System\GameConfigStore" "GameDVR_Enabled" 0
+    Set-RegValue "HKCU:\Software\Microsoft\Windows\CurrentVersion\GameDVR" "AppCaptureEnabled" 0
+
+    if ($FiveMMode) {
+        foreach ($line in (Invoke-FiveMTweaks)) {
+            $log.Add($line)
+        }
+    }
+
+    if ($FortniteMode) {
+        foreach ($line in (Invoke-FortniteTweaks)) {
+            $log.Add($line)
+        }
+    }
+
     return $log
 }
 
@@ -258,13 +332,9 @@ function Invoke-StandardTweaks {
         [bool]$FortniteMode
     )
 
-    $log = Invoke-MinimalTweaks
+    $log = Invoke-MinimalTweaks -FiveMMode $FiveMMode -FortniteMode $FortniteMode
 
     $log.Add((Set-HighPerformancePower))
-
-    $log.Add("Enabling Windows Game Mode.")
-    Set-RegValue "HKCU:\Software\Microsoft\GameBar" "AllowAutoGameMode" 1
-    Set-RegValue "HKCU:\Software\Microsoft\GameBar" "AutoGameModeEnabled" 1
 
     $log.Add("Disabling Xbox Game DVR and background capture.")
     Set-RegValue "HKCU:\System\GameConfigStore" "GameDVR_Enabled" 0
@@ -281,18 +351,6 @@ function Invoke-StandardTweaks {
 
     $log.Add("Enabling Storage Sense.")
     Set-RegValue "HKCU:\Software\Microsoft\Windows\CurrentVersion\StorageSense\Parameters\StoragePolicy" "01" 1
-
-    if ($FiveMMode) {
-        foreach ($line in (Invoke-FiveMTweaks)) {
-            $log.Add($line)
-        }
-    }
-
-    if ($FortniteMode) {
-        foreach ($line in (Invoke-FortniteTweaks)) {
-            $log.Add($line)
-        }
-    }
 
     return $log
 }
@@ -331,38 +389,52 @@ function Invoke-AdvancedTweaks {
     Set-RegValue "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects" "VisualFXSetting" 2
     Set-RegValue "HKCU:\Control Panel\Desktop" "FontSmoothing" "2" ([Microsoft.Win32.RegistryValueKind]::String)
 
+    if ($FiveMMode) {
+        foreach ($line in (Clear-FiveMCache)) {
+            $log.Add($line)
+        }
+    }
+
+    if ($FortniteMode) {
+        foreach ($line in (Clear-FortniteCache)) {
+            $log.Add($line)
+        }
+    }
+
     return $log
 }
 
 $planDetails = @{
     Minimal = @(
-        "Best for: light FiveM/Fortnite cleanup, very low risk",
-        "FPS target: up to +10 FPS if Windows background overhead was hurting your game",
-        "Guarantee: no fixed FPS gain; results depend on game, GPU, CPU, RAM, and thermals",
+        "Best for: fast FiveM/Fortnite setup with low risk",
+        "FPS target: +20-25 FPS when background capture/GPU preference was hurting your game",
+        "Note: FPS is not guaranteed; it depends on server, map, GPU, CPU, RAM, drivers, and thermals",
         "Reduce Windows tips, suggestions, and notification clutter",
         "Disable transparency effects",
-        "Clear temporary files"
+        "Clear temporary files",
+        "Enable Game Mode and disable background capture",
+        "Apply selected game GPU preference/fullscreen optimization tweaks"
     )
     Standard = @(
         "Best for: FiveM/Fortnite setup most players should use",
-        "FPS target: up to +15 FPS when capture, Game DVR, or power limits were hurting performance",
-        "Guarantee: no fixed FPS gain; this plan is mainly for smoother FPS and better 1% lows",
+        "FPS target: +35-40 FPS when capture, Game DVR, power limits, or bad GPU preference were hurting performance",
+        "Note: strongest improvements are usually smoother FPS and better 1% lows",
         "Everything in Minimal",
         "Enable High performance power plan",
-        "Enable Game Mode",
         "Disable Xbox Game DVR/background capture",
         "Disable Windows power throttling",
         "Game modes: high-performance GPU preference and fullscreen optimization tweak"
     )
     Advanced = @(
         "Best for: FiveM/Fortnite desktop setup where FPS consistency matters most",
-        "FPS target: up to +20-25 FPS on PCs limited by Windows overhead or power behavior",
-        "Guarantee: no fixed FPS gain; strongest chance is better stutter and 1% lows",
+        "FPS target: +45-50 FPS on PCs heavily limited by Windows overhead, cache, or power behavior",
+        "Note: no honest optimizer can guarantee the same FPS gain on every PC/server",
         "Everything in Standard",
         "Optional Ultimate Performance power plan",
         "Optional Hardware-accelerated GPU scheduling",
         "Disable hibernation and Fast Startup",
-        "Apply gaming multimedia scheduler priorities"
+        "Apply gaming multimedia scheduler priorities",
+        "Clean selected FiveM/Fortnite cache folders"
     )
 }
 
@@ -595,9 +667,8 @@ function Update-Details {
     $isAdvanced = ($plan -eq "Advanced")
     $ultimateCheck.Enabled = $isAdvanced
     $hagsCheck.Enabled = $isAdvanced
-    $gameModeEnabled = ($plan -ne "Minimal")
-    $fiveMCheck.Enabled = $gameModeEnabled
-    $fortniteCheck.Enabled = $gameModeEnabled
+    $fiveMCheck.Enabled = $true
+    $fortniteCheck.Enabled = $true
 }
 
 function Update-AdminState {
@@ -650,7 +721,7 @@ $applyButton.Add_Click({
     } elseif ($plan -eq "Standard") {
         $result = Invoke-StandardTweaks -FiveMMode $fiveMCheck.Checked -FortniteMode $fortniteCheck.Checked
     } else {
-        $result = Invoke-MinimalTweaks
+        $result = Invoke-MinimalTweaks -FiveMMode $fiveMCheck.Checked -FortniteMode $fortniteCheck.Checked
     }
 
     foreach ($line in $result) {

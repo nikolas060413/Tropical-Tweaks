@@ -30,4 +30,4 @@ Start-Process -FilePath "powershell.exe" -ArgumentList @(
     "Bypass",
     "-File",
     "`"$AppPath`""
-) -WindowStyle Hidden
+)

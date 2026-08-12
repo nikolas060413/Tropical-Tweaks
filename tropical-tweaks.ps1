@@ -438,223 +438,266 @@ $planDetails = @{
     )
 }
 
-$Deep = [System.Drawing.Color]::FromArgb(8, 20, 19)
-$Panel = [System.Drawing.Color]::FromArgb(15, 35, 32)
-$Panel2 = [System.Drawing.Color]::FromArgb(20, 49, 44)
-$Mint = [System.Drawing.Color]::FromArgb(34, 197, 170)
-$MintDark = [System.Drawing.Color]::FromArgb(16, 132, 121)
-$Gold = [System.Drawing.Color]::FromArgb(245, 190, 88)
-$Text = [System.Drawing.Color]::FromArgb(236, 252, 248)
-$Muted = [System.Drawing.Color]::FromArgb(156, 185, 178)
-$Border = [System.Drawing.Color]::FromArgb(44, 83, 76)
+$Deep = [System.Drawing.Color]::FromArgb(6, 12, 14)
+$Surface = [System.Drawing.Color]::FromArgb(12, 26, 29)
+$Surface2 = [System.Drawing.Color]::FromArgb(17, 39, 42)
+$Surface3 = [System.Drawing.Color]::FromArgb(22, 55, 56)
+$Mint = [System.Drawing.Color]::FromArgb(34, 211, 177)
+$MintDark = [System.Drawing.Color]::FromArgb(13, 148, 136)
+$Cyan = [System.Drawing.Color]::FromArgb(103, 232, 249)
+$Gold = [System.Drawing.Color]::FromArgb(250, 204, 96)
+$Text = [System.Drawing.Color]::FromArgb(240, 253, 250)
+$Muted = [System.Drawing.Color]::FromArgb(148, 176, 174)
+$Border = [System.Drawing.Color]::FromArgb(45, 93, 91)
+$Danger = [System.Drawing.Color]::FromArgb(251, 113, 133)
+
+function New-Panel {
+    param(
+        [int]$X,
+        [int]$Y,
+        [int]$W,
+        [int]$H,
+        [System.Drawing.Color]$BackColor
+    )
+
+    $panel = New-Object System.Windows.Forms.Panel
+    $panel.Location = New-Object System.Drawing.Point($X, $Y)
+    $panel.Size = New-Object System.Drawing.Size($W, $H)
+    $panel.BackColor = $BackColor
+    $panel.BorderStyle = "FixedSingle"
+    return $panel
+}
+
+function New-TextLabel {
+    param(
+        [string]$TextValue,
+        [int]$X,
+        [int]$Y,
+        [System.Drawing.Font]$Font,
+        [System.Drawing.Color]$ForeColor
+    )
+
+    $label = New-Object System.Windows.Forms.Label
+    $label.Text = $TextValue
+    $label.Location = New-Object System.Drawing.Point($X, $Y)
+    $label.Font = $Font
+    $label.ForeColor = $ForeColor
+    $label.BackColor = [System.Drawing.Color]::Transparent
+    $label.AutoSize = $true
+    return $label
+}
 
 $form = New-Object System.Windows.Forms.Form
 $form.Text = "Tropical Tweaks"
-$form.Size = New-Object System.Drawing.Size(900, 620)
+$form.Size = New-Object System.Drawing.Size(980, 665)
 $form.StartPosition = "CenterScreen"
-$form.MinimumSize = New-Object System.Drawing.Size(820, 580)
+$form.MinimumSize = New-Object System.Drawing.Size(930, 625)
 $form.BackColor = $Deep
 $form.Font = New-Object System.Drawing.Font("Segoe UI", 10)
+$form.FormBorderStyle = "FixedSingle"
+$form.MaximizeBox = $false
 
-$headerPanel = New-Object System.Windows.Forms.Panel
-$headerPanel.Location = New-Object System.Drawing.Point(18, 16)
-$headerPanel.Size = New-Object System.Drawing.Size(846, 118)
-$headerPanel.BackColor = $Panel
-$form.Controls.Add($headerPanel)
+$shellPanel = New-Panel 18 16 928 600 $Surface
+$form.Controls.Add($shellPanel)
+
+$headerPanel = New-Panel 20 18 888 128 $Surface2
+$shellPanel.Controls.Add($headerPanel)
 
 if (Test-Path $LogoPath) {
     $logo = New-Object System.Windows.Forms.PictureBox
-    $logo.Location = New-Object System.Drawing.Point(20, 16)
-    $logo.Size = New-Object System.Drawing.Size(86, 86)
+    $logo.Location = New-Object System.Drawing.Point(22, 17)
+    $logo.Size = New-Object System.Drawing.Size(96, 96)
     $logo.SizeMode = "Zoom"
     $logo.Image = [System.Drawing.Image]::FromFile($LogoPath)
     $headerPanel.Controls.Add($logo)
 }
 
-$title = New-Object System.Windows.Forms.Label
-$title.Text = "Tropical Tweaks"
-$title.Font = New-Object System.Drawing.Font("Segoe UI Semibold", 25)
-$title.ForeColor = $Text
-$title.AutoSize = $true
-$title.Location = New-Object System.Drawing.Point(122, 20)
+$title = New-TextLabel "Tropical Tweaks" 136 22 (New-Object System.Drawing.Font("Segoe UI Semibold", 27)) $Text
 $headerPanel.Controls.Add($title)
 
-$subtitle = New-Object System.Windows.Forms.Label
-$subtitle.Text = "Choose a plan for FPS potential, less background overhead, better 1% lows, and smoother response."
-$subtitle.ForeColor = $Muted
-$subtitle.AutoSize = $true
-$subtitle.Location = New-Object System.Drawing.Point(126, 67)
+$subtitle = New-TextLabel "FiveM-first performance tuning with clean presets, backups, and game profiles." 140 72 (New-Object System.Drawing.Font("Segoe UI", 10)) $Muted
 $headerPanel.Controls.Add($subtitle)
 
-$badge = New-Object System.Windows.Forms.Label
-$badge.Text = "FiveM focused"
-$badge.Font = New-Object System.Drawing.Font("Segoe UI Semibold", 9)
-$badge.ForeColor = $Deep
+$badge = New-TextLabel "FIVEM PERFORMANCE SUITE" 674 24 (New-Object System.Drawing.Font("Segoe UI Semibold", 8)) $Deep
 $badge.BackColor = $Gold
-$badge.AutoSize = $true
 $badge.Padding = New-Object System.Windows.Forms.Padding(10, 5, 10, 5)
-$badge.Location = New-Object System.Drawing.Point(700, 22)
 $headerPanel.Controls.Add($badge)
 
-$planGroup = New-Object System.Windows.Forms.GroupBox
-$planGroup.Text = "Plan"
-$planGroup.Location = New-Object System.Drawing.Point(28, 154)
-$planGroup.Size = New-Object System.Drawing.Size(260, 176)
-$planGroup.ForeColor = $Mint
-$planGroup.BackColor = $Deep
-$form.Controls.Add($planGroup)
+$versionBadge = New-TextLabel "v2 premium" 770 72 (New-Object System.Drawing.Font("Segoe UI Semibold", 9)) $Cyan
+$headerPanel.Controls.Add($versionBadge)
+
+$plansTitle = New-TextLabel "Choose Plan" 24 164 (New-Object System.Drawing.Font("Segoe UI Semibold", 13)) $Text
+$shellPanel.Controls.Add($plansTitle)
+
+$minimalCard = New-Panel 24 198 260 88 $Surface2
+$standardCard = New-Panel 24 298 260 88 $Surface2
+$advancedCard = New-Panel 24 398 260 88 $Surface2
+$shellPanel.Controls.Add($minimalCard)
+$shellPanel.Controls.Add($standardCard)
+$shellPanel.Controls.Add($advancedCard)
 
 $minimalRadio = New-Object System.Windows.Forms.RadioButton
 $minimalRadio.Text = "Minimal"
-$minimalRadio.Location = New-Object System.Drawing.Point(18, 34)
+$minimalRadio.Location = New-Object System.Drawing.Point(18, 16)
 $minimalRadio.AutoSize = $true
+$minimalRadio.Font = New-Object System.Drawing.Font("Segoe UI Semibold", 12)
 $minimalRadio.ForeColor = $Text
 $minimalRadio.Checked = $true
-$planGroup.Controls.Add($minimalRadio)
+$minimalCard.Controls.Add($minimalRadio)
+$minimalCard.Controls.Add((New-TextLabel "+20-25 FPS target" 38 48 (New-Object System.Drawing.Font("Segoe UI", 9)) $Muted))
 
 $standardRadio = New-Object System.Windows.Forms.RadioButton
 $standardRadio.Text = "Standard"
-$standardRadio.Location = New-Object System.Drawing.Point(18, 76)
+$standardRadio.Location = New-Object System.Drawing.Point(18, 16)
 $standardRadio.AutoSize = $true
+$standardRadio.Font = New-Object System.Drawing.Font("Segoe UI Semibold", 12)
 $standardRadio.ForeColor = $Text
-$planGroup.Controls.Add($standardRadio)
+$standardCard.Controls.Add($standardRadio)
+$standardCard.Controls.Add((New-TextLabel "+35-40 FPS target" 38 48 (New-Object System.Drawing.Font("Segoe UI", 9)) $Muted))
 
 $advancedRadio = New-Object System.Windows.Forms.RadioButton
 $advancedRadio.Text = "Advanced"
-$advancedRadio.Location = New-Object System.Drawing.Point(18, 118)
+$advancedRadio.Location = New-Object System.Drawing.Point(18, 16)
 $advancedRadio.AutoSize = $true
+$advancedRadio.Font = New-Object System.Drawing.Font("Segoe UI Semibold", 12)
 $advancedRadio.ForeColor = $Text
-$planGroup.Controls.Add($advancedRadio)
+$advancedCard.Controls.Add($advancedRadio)
+$advancedCard.Controls.Add((New-TextLabel "+45-50 FPS target" 38 48 (New-Object System.Drawing.Font("Segoe UI", 9)) $Muted))
 
-$safetyGroup = New-Object System.Windows.Forms.GroupBox
-$safetyGroup.Text = "Safety"
-$safetyGroup.Location = New-Object System.Drawing.Point(28, 346)
-$safetyGroup.Size = New-Object System.Drawing.Size(260, 100)
-$safetyGroup.ForeColor = $Mint
-$safetyGroup.BackColor = $Deep
-$form.Controls.Add($safetyGroup)
+$mainPanel = New-Panel 308 164 600 322 $Surface2
+$shellPanel.Controls.Add($mainPanel)
 
-$restoreCheck = New-Object System.Windows.Forms.CheckBox
-$restoreCheck.Text = "Create restore point"
-$restoreCheck.Checked = $true
-$restoreCheck.AutoSize = $true
-$restoreCheck.ForeColor = $Text
-$restoreCheck.Location = New-Object System.Drawing.Point(16, 30)
-$safetyGroup.Controls.Add($restoreCheck)
+$detailsLabel = New-TextLabel "Plan Details" 20 18 (New-Object System.Drawing.Font("Segoe UI Semibold", 13)) $Text
+$mainPanel.Controls.Add($detailsLabel)
 
-$backupCheck = New-Object System.Windows.Forms.CheckBox
-$backupCheck.Text = "Export registry backup"
-$backupCheck.Checked = $true
-$backupCheck.AutoSize = $true
-$backupCheck.ForeColor = $Text
-$backupCheck.Location = New-Object System.Drawing.Point(16, 60)
-$safetyGroup.Controls.Add($backupCheck)
+$detailsBox = New-Object System.Windows.Forms.ListBox
+$detailsBox.Location = New-Object System.Drawing.Point(22, 54)
+$detailsBox.Size = New-Object System.Drawing.Size(556, 178)
+$detailsBox.BackColor = $Surface3
+$detailsBox.ForeColor = $Text
+$detailsBox.BorderStyle = "FixedSingle"
+$detailsBox.Font = New-Object System.Drawing.Font("Segoe UI", 9)
+$mainPanel.Controls.Add($detailsBox)
 
-$advancedGroup = New-Object System.Windows.Forms.GroupBox
-$advancedGroup.Text = "Options"
-$advancedGroup.Location = New-Object System.Drawing.Point(314, 346)
-$advancedGroup.Size = New-Object System.Drawing.Size(550, 98)
-$advancedGroup.ForeColor = $Mint
-$advancedGroup.BackColor = $Deep
-$form.Controls.Add($advancedGroup)
+$optionsTitle = New-TextLabel "Options" 20 250 (New-Object System.Drawing.Font("Segoe UI Semibold", 11)) $Mint
+$mainPanel.Controls.Add($optionsTitle)
 
 $ultimateCheck = New-Object System.Windows.Forms.CheckBox
-$ultimateCheck.Text = "Use Ultimate Performance power plan"
+$ultimateCheck.Text = "Ultimate Performance"
 $ultimateCheck.Checked = $true
 $ultimateCheck.AutoSize = $true
 $ultimateCheck.ForeColor = $Text
-$ultimateCheck.Location = New-Object System.Drawing.Point(16, 27)
-$advancedGroup.Controls.Add($ultimateCheck)
+$ultimateCheck.Location = New-Object System.Drawing.Point(22, 282)
+$mainPanel.Controls.Add($ultimateCheck)
 
 $hagsCheck = New-Object System.Windows.Forms.CheckBox
-$hagsCheck.Text = "Enable HAGS"
+$hagsCheck.Text = "HAGS"
 $hagsCheck.Checked = $false
 $hagsCheck.AutoSize = $true
 $hagsCheck.ForeColor = $Text
-$hagsCheck.Location = New-Object System.Drawing.Point(282, 27)
-$advancedGroup.Controls.Add($hagsCheck)
+$hagsCheck.Location = New-Object System.Drawing.Point(206, 282)
+$mainPanel.Controls.Add($hagsCheck)
 
 $fiveMCheck = New-Object System.Windows.Forms.CheckBox
 $fiveMCheck.Text = "FiveM mode"
 $fiveMCheck.Checked = $true
 $fiveMCheck.AutoSize = $true
 $fiveMCheck.ForeColor = $Text
-$fiveMCheck.Location = New-Object System.Drawing.Point(16, 62)
-$advancedGroup.Controls.Add($fiveMCheck)
+$fiveMCheck.Location = New-Object System.Drawing.Point(302, 282)
+$mainPanel.Controls.Add($fiveMCheck)
 
 $fortniteCheck = New-Object System.Windows.Forms.CheckBox
 $fortniteCheck.Text = "Fortnite mode"
-$fortniteCheck.Checked = $true
+$fortniteCheck.Checked = $false
 $fortniteCheck.AutoSize = $true
 $fortniteCheck.ForeColor = $Text
-$fortniteCheck.Location = New-Object System.Drawing.Point(140, 62)
-$advancedGroup.Controls.Add($fortniteCheck)
+$fortniteCheck.Location = New-Object System.Drawing.Point(420, 282)
+$mainPanel.Controls.Add($fortniteCheck)
 
-$detailsLabel = New-Object System.Windows.Forms.Label
-$detailsLabel.Text = "What this plan changes"
-$detailsLabel.Font = New-Object System.Drawing.Font("Segoe UI Semibold", 11)
-$detailsLabel.ForeColor = $Mint
-$detailsLabel.AutoSize = $true
-$detailsLabel.Location = New-Object System.Drawing.Point(310, 156)
-$form.Controls.Add($detailsLabel)
+$safetyPanel = New-Panel 24 506 260 72 $Surface2
+$shellPanel.Controls.Add($safetyPanel)
+$safetyPanel.Controls.Add((New-TextLabel "Safety" 18 12 (New-Object System.Drawing.Font("Segoe UI Semibold", 11)) $Mint))
 
-$detailsBox = New-Object System.Windows.Forms.ListBox
-$detailsBox.Location = New-Object System.Drawing.Point(314, 186)
-$detailsBox.Size = New-Object System.Drawing.Size(550, 144)
-$detailsBox.BackColor = $Panel2
-$detailsBox.ForeColor = $Text
-$detailsBox.BorderStyle = "FixedSingle"
-$form.Controls.Add($detailsBox)
+$restoreCheck = New-Object System.Windows.Forms.CheckBox
+$restoreCheck.Text = "Restore point"
+$restoreCheck.Checked = $true
+$restoreCheck.AutoSize = $true
+$restoreCheck.ForeColor = $Text
+$restoreCheck.Location = New-Object System.Drawing.Point(18, 42)
+$safetyPanel.Controls.Add($restoreCheck)
 
-$logLabel = New-Object System.Windows.Forms.Label
-$logLabel.Text = "Log"
-$logLabel.Font = New-Object System.Drawing.Font("Segoe UI Semibold", 11)
-$logLabel.ForeColor = $Mint
-$logLabel.AutoSize = $true
-$logLabel.Location = New-Object System.Drawing.Point(310, 458)
-$form.Controls.Add($logLabel)
+$backupCheck = New-Object System.Windows.Forms.CheckBox
+$backupCheck.Text = "Registry backup"
+$backupCheck.Checked = $true
+$backupCheck.AutoSize = $true
+$backupCheck.ForeColor = $Text
+$backupCheck.Location = New-Object System.Drawing.Point(138, 42)
+$safetyPanel.Controls.Add($backupCheck)
 
-$logBox = New-Object System.Windows.Forms.TextBox
-$logBox.Location = New-Object System.Drawing.Point(314, 488)
-$logBox.Size = New-Object System.Drawing.Size(550, 62)
-$logBox.Multiline = $true
-$logBox.ScrollBars = "Vertical"
-$logBox.ReadOnly = $true
-$logBox.BackColor = $Panel2
-$logBox.ForeColor = $Text
-$logBox.BorderStyle = "FixedSingle"
-$form.Controls.Add($logBox)
+$actionPanel = New-Panel 308 506 600 72 $Surface2
+$shellPanel.Controls.Add($actionPanel)
 
 $adminButton = New-Object System.Windows.Forms.Button
-$adminButton.Text = "Restart as admin"
-$adminButton.Location = New-Object System.Drawing.Point(28, 472)
-$adminButton.Size = New-Object System.Drawing.Size(142, 38)
-$adminButton.BackColor = $Panel2
+$adminButton.Text = "Restart as Admin"
+$adminButton.Location = New-Object System.Drawing.Point(18, 17)
+$adminButton.Size = New-Object System.Drawing.Size(150, 38)
+$adminButton.BackColor = $Surface3
 $adminButton.ForeColor = $Text
 $adminButton.FlatStyle = "Flat"
 $adminButton.FlatAppearance.BorderColor = $Border
-$form.Controls.Add($adminButton)
+$actionPanel.Controls.Add($adminButton)
 
 $applyButton = New-Object System.Windows.Forms.Button
-$applyButton.Text = "Apply selected plan"
-$applyButton.Location = New-Object System.Drawing.Point(28, 516)
+$applyButton.Text = "Apply Selected Plan"
+$applyButton.Location = New-Object System.Drawing.Point(182, 17)
 $applyButton.Size = New-Object System.Drawing.Size(190, 38)
 $applyButton.BackColor = $MintDark
 $applyButton.ForeColor = $Text
 $applyButton.FlatStyle = "Flat"
 $applyButton.FlatAppearance.BorderColor = $Mint
-$form.Controls.Add($applyButton)
+$actionPanel.Controls.Add($applyButton)
 
 $statusLabel = New-Object System.Windows.Forms.Label
-$statusLabel.AutoSize = $true
-$statusLabel.Location = New-Object System.Drawing.Point(236, 526)
+$statusLabel.AutoSize = $false
+$statusLabel.Location = New-Object System.Drawing.Point(392, 16)
+$statusLabel.Size = New-Object System.Drawing.Size(190, 40)
 $statusLabel.ForeColor = $Muted
-$form.Controls.Add($statusLabel)
+$statusLabel.BackColor = [System.Drawing.Color]::Transparent
+$statusLabel.TextAlign = "MiddleLeft"
+$actionPanel.Controls.Add($statusLabel)
+
+$logLabel = New-TextLabel "Activity Log" 626 490 (New-Object System.Drawing.Font("Segoe UI Semibold", 10)) $Mint
+$shellPanel.Controls.Add($logLabel)
+
+$logBox = New-Object System.Windows.Forms.TextBox
+$logBox.Location = New-Object System.Drawing.Point(626, 516)
+$logBox.Size = New-Object System.Drawing.Size(282, 62)
+$logBox.Multiline = $true
+$logBox.ScrollBars = "Vertical"
+$logBox.ReadOnly = $true
+$logBox.BackColor = $Surface3
+$logBox.ForeColor = $Text
+$logBox.BorderStyle = "FixedSingle"
+$logBox.Font = New-Object System.Drawing.Font("Consolas", 8)
+$shellPanel.Controls.Add($logBox)
 
 function Get-SelectedPlan {
     if ($advancedRadio.Checked) { return "Advanced" }
     if ($standardRadio.Checked) { return "Standard" }
     return "Minimal"
+}
+
+function Set-PlanCardStyle {
+    param(
+        [System.Windows.Forms.Panel]$Card,
+        [bool]$Selected
+    )
+
+    if ($Selected) {
+        $Card.BackColor = $Surface3
+    } else {
+        $Card.BackColor = $Surface2
+    }
 }
 
 function Update-Details {
@@ -663,6 +706,10 @@ function Update-Details {
     foreach ($item in $planDetails[$plan]) {
         [void]$detailsBox.Items.Add($item)
     }
+
+    Set-PlanCardStyle $minimalCard ($plan -eq "Minimal")
+    Set-PlanCardStyle $standardCard ($plan -eq "Standard")
+    Set-PlanCardStyle $advancedCard ($plan -eq "Advanced")
 
     $isAdvanced = ($plan -eq "Advanced")
     $ultimateCheck.Enabled = $isAdvanced
@@ -673,10 +720,10 @@ function Update-Details {
 
 function Update-AdminState {
     if (Test-IsAdmin) {
-        $statusLabel.Text = "Running as administrator."
+        $statusLabel.Text = "Admin mode active."
         $adminButton.Enabled = $false
     } else {
-        $statusLabel.Text = "Not running as administrator. Standard/Advanced need admin permission."
+        $statusLabel.Text = "Admin recommended."
         $adminButton.Enabled = $true
     }
 }
@@ -684,6 +731,9 @@ function Update-AdminState {
 $minimalRadio.Add_CheckedChanged({ Update-Details })
 $standardRadio.Add_CheckedChanged({ Update-Details })
 $advancedRadio.Add_CheckedChanged({ Update-Details })
+$minimalCard.Add_Click({ $minimalRadio.Checked = $true })
+$standardCard.Add_Click({ $standardRadio.Checked = $true })
+$advancedCard.Add_Click({ $advancedRadio.Checked = $true })
 $adminButton.Add_Click({ Restart-AsAdmin })
 
 $applyButton.Add_Click({

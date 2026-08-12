@@ -5,9 +5,11 @@
 $ErrorActionPreference = "Stop"
 
 $TropicalTweaksUrl = "https://raw.githubusercontent.com/nikolas060413/Tropical-Tweaks/main/tropical-tweaks.ps1"
+$TropicalLogoUrl = "https://raw.githubusercontent.com/nikolas060413/Tropical-Tweaks/main/tropical-logo.png"
 
 $InstallDir = Join-Path $env:LOCALAPPDATA "TropicalTweaks"
 $AppPath = Join-Path $InstallDir "TropicalTweaks.ps1"
+$LogoPath = Join-Path $InstallDir "tropical-logo.png"
 
 New-Item -ItemType Directory -Force -Path $InstallDir | Out-Null
 
@@ -21,6 +23,7 @@ if ($TropicalTweaksUrl -like "https://your-site.com/*") {
 
 Write-Host "Downloading Tropical Tweaks..."
 Invoke-WebRequest -UseBasicParsing -Uri $TropicalTweaksUrl -OutFile $AppPath
+Invoke-WebRequest -UseBasicParsing -Uri $TropicalLogoUrl -OutFile $LogoPath
 
 Write-Host "Opening Tropical Tweaks..."
 & $AppPath

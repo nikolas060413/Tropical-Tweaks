@@ -4,8 +4,7 @@
 
 $ErrorActionPreference = "Stop"
 
-# Replace this with the raw URL of tropical-tweaks.ps1 after you upload it.
-$TropicalTweaksUrl = "https://your-site.com/tropical-tweaks.ps1"
+$TropicalTweaksUrl = "https://raw.githubusercontent.com/nikolas060413/Tropical-Tweaks/main/tropical-tweaks.ps1"
 
 $InstallDir = Join-Path $env:LOCALAPPDATA "TropicalTweaks"
 $AppPath = Join-Path $InstallDir "TropicalTweaks.ps1"
@@ -32,4 +31,3 @@ Start-Process -FilePath "powershell.exe" -ArgumentList @(
     "-File",
     "`"$AppPath`""
 ) -WindowStyle Hidden
-
